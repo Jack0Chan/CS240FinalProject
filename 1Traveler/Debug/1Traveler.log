@@ -1,0 +1,3 @@
+﻿  1Traveler.cpp
+C:\Users\ccc\Documents\GitHub\CS240FinalProject\1Traveler\1Traveler.cpp(124,1): warning C4326: “main”的返回类型应为“int”而非“long”
+  1Traveler.vcxproj -> C:\Users\ccc\Documents\GitHub\CS240FinalProject\1Traveler\Debug\1Traveler.exe

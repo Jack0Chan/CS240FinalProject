@@ -1,7 +1,7 @@
 import sys
 if __name__ == '__main__':
     # read input
-    N = int(sys.stdin.readline())
+    N = int(input())
 
     # if A is already a Bitcon Array
     # then obviously
