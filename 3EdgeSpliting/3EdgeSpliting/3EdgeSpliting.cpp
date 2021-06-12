@@ -1,70 +1,118 @@
 ﻿#include <iostream>
-#include <map>
 #include <vector>
+#include <map>
 
 using namespace std;
 
 class EdgeSplitter
 {
 public:
-    // graph in dict format
+    long numVertices;
+    // use set to map the vertices
+    map<long, long> vertexMap;
+    vector<vector<long>> inputEdges = {};
     // simple for bi-color checking
-    map<int, vector<int>> originGraph;
+    vector<vector<long>> originGraph;
     // graph in matrix format
     // simple for floyd
-    // there are at most 200 vertices
+    // there are at most 200 vertices XXXXXX :(
     // we do not know whether the name of the nodes 
     // are continuous
-    vector<vector<int>> matrixGraph(200, vector<int>(200));
-    vector<vector<int>> floydGraph;
-    int diameter = 0;
-    vector<int> vertexColor(200);
+    vector<vector<long>> matrixGraph;
+    vector<vector<long>> floydGraph;
+    long diameter = 0;
+    vector<long> vertexColor;
 
     void ReadInput();
     void OutputOriginGraph();
-    bool BiColorVertex(int vertex, int colorID);
+    void OutputFloyd();
+    bool BiColorVertex(long vertex, int colorID);
     bool IsBipartite();
-    int GetDiameter();
+    long GetDiameter();
     void Floyd();
     void SplitEdges();
 };
 
 void EdgeSplitter::ReadInput()
 {
-    int node1, node2;
+    // 看错题了第一行输入搞错了，我吐了de了好久的bug
+    int n1, n2;
+    cin >> n1 >> n2;
+    // 我tm以为第一行也是一个边
+    long node1, node2;
     while (cin >> node1 >> node2)
     {
-        if (originGraph.count(node1) == 0) originGraph.insert({ node1, {} });
-        if (originGraph.count(node2) == 0) originGraph.insert({ node2, {} });
-        originGraph[node1].push_back(ndoe2);
-        originGraph[node2].push_back(ndoe1);
+        inputEdges.push_back({ node1, node2 });
+        if (vertexMap.count(node1) == 0) vertexMap[node1] = vertexMap.size();
+        if (vertexMap.count(node2) == 0) vertexMap[node2] = vertexMap.size();
+    }
+
+    numVertices = (long)vertexMap.size();
+    originGraph = vector<vector<long>>(numVertices);
+    matrixGraph = vector<vector<long>>(numVertices, vector<long>(numVertices));
+    vertexColor = vector<long>(numVertices);
+
+    for (long e = 0; e < (long)inputEdges.size(); e++)
+    {
+        node1 = vertexMap[inputEdges[e][0]];
+        node2 = vertexMap[inputEdges[e][1]];
+        matrixGraph[node1][node2] = 1;
+        matrixGraph[node2][node1] = 1;
+    }
+
+    for (long i = 0; i < numVertices; i++)
+    {
+        for (long j = 0; j < numVertices; j++)
+        {
+            if (matrixGraph[i][j] == 1) originGraph[i].push_back(j);
+        }
     }
 }
 
 void EdgeSplitter::OutputOriginGraph()
 {
-    map<int, vector<int>>::const_iterator it;
-    for (it = originGraph.begin(); it != originGraph.end(); ++it) {
-        cout << "node: " << it->first << " neibor: " << it->second << endl;
+    for (long i = 0; i < numVertices; i++)
+    {
+        for (long j = 0; j < numVertices; j++)
+        {
+            cout << matrixGraph[i][j];
+        }
+        cout << endl;
+    }
+}
+
+void EdgeSplitter::OutputFloyd()
+{
+    for (long i = 0; i < numVertices; i++)
+    {
+        for (long j = 0; j < numVertices; j++)
+        {
+            cout << floydGraph[i][j] << " ";
+        }
+        cout << endl;
     }
 }
 
 // color the graph with two colors
 // two colors 1 and -1, because origin are set 0
-bool EdgeSplitter::BiColorVertex(int vertex, int colorID)
+bool EdgeSplitter::BiColorVertex(long vertexID, int colorID)
 {
     // first color current vertex
-    vertexColor[vertex] = colorID;
+    vertexColor[vertexID] = colorID;
     // check all neibor nodes
-    for (v in originGraph[vertex])
+    // cout << "size: " << originGraph[vertex].size() << endl;
+    long v;
+    for (long i = 0; i < (long)originGraph[vertexID].size(); i++)
     {
+        v = originGraph[vertexID][i];
+        // cout << "i: " << i << " v: " << v << endl;
         // if have the same color, not bipartite
-        if (color[v] == colorID) return false;
+        if (vertexColor[v] == colorID) return false;
         // if not colored, try to give it an inverse color
-        if (color[v] == 0 && !ColorVertex(v, -colorID)) return false;
+        if ((vertexColor[v] == 0) && !BiColorVertex(v, -colorID)) return false;
         // if all the checkings above are finished
-        return true;
     }
+    return true;
 }
 
 // the graph satisfies edge splliting iff it is bipartite
@@ -73,37 +121,53 @@ bool EdgeSplitter::IsBipartite()
     return BiColorVertex(0, 1);
 }
 
-// reference: https://baike.baidu.com/item/Floyd%E7%AE%97%E6%B3%95
+// reference: baidubaike
 void EdgeSplitter::Floyd()
 {
+    floydGraph = vector<vector<long>>(numVertices, vector<long>(numVertices, 999999));
     // deep copy
-    floydGraph.assign(matrixGraph.begin(), matrixGraph.end());
-    for (int k = 0; k < 200; k++) 
+    for (int i = 0; i < numVertices; i++)
     {
-        for (int i = 0; i < 200; i++)
+        for (int j = 0; j < numVertices; j++)
         {
-            for (int j = 0; j < 200; j++)
+            if (matrixGraph[i][j] == 1) floydGraph[i][j] = 1;
+        }
+        floydGraph[i][i] = 0;
+    }
+
+    for (long k = 0; k < numVertices; k++)
+    {
+        for (long i = 0; i < numVertices; i++)
+        {
+            for (long j = 0; j < numVertices; j++)
             {
                 if (floydGraph[i][j] > floydGraph[i][k] + floydGraph[k][j])
                 {
                     floydGraph[i][j] = floydGraph[i][k] + floydGraph[k][j];
-                    // update diameter
-                    diameter = max(diameter, floydGraph[i][j]);
                 }
             }
         }
     }
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (int j = 0; j < numVertices; j++)
+        {
+            diameter = max(diameter, floydGraph[i][j]);
+        }
+    }
 }
 
-int EdgeSplitter::GetDiameter()
+long EdgeSplitter::GetDiameter()
 {
     return diameter;
 }
 
 void EdgeSplitter::SplitEdges()
 {
-    if !IsBipartite()
+    if (!IsBipartite())
     {
+        // floydGraph[numVertices + 10][numVertices + 10] = 9999;
         cout << -1 << endl;
     }
     else
@@ -116,6 +180,10 @@ int main()
 {
     EdgeSplitter edgeSplitter;
     edgeSplitter.ReadInput();
+    edgeSplitter.Floyd();
+    // edgeSplitter.OutputOriginGraph();
+    // edgeSplitter.OutputFloyd();
+    // cout << "isBipartite: " << edgeSplitter.IsBipartite() << endl;
     edgeSplitter.SplitEdges();
     return 0;
 }
