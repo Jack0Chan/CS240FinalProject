@@ -124,7 +124,7 @@ bool EdgeSplitter::IsBipartite()
 // reference: baidubaike
 void EdgeSplitter::Floyd()
 {
-    floydGraph = vector<vector<long>>(numVertices, vector<long>(numVertices, 999999));
+    floydGraph = vector<vector<long>>(numVertices, vector<long>(numVertices, numVertices+1));
     // deep copy
     for (int i = 0; i < numVertices; i++)
     {
